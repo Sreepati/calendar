@@ -24,15 +24,15 @@ var SCOPES = ["https://www.googleapis.com/auth/calendar","https://www.googleapis
         var authorizeButton = document.getElementById('authorize-button');
         var authorizeDiv = document.getElementById('authorize-div');
         if (authResult && !authResult.error) {
-			      /*** successfully authorized ***/
-			      authorizeButton.style.visibility = 'hidden';
-			      authorizeDiv.style.display = 'block';
-			      makeApiCall();
+		/*** successfully authorized ***/
+		authorizeButton.style.visibility = 'hidden';
+		authorizeDiv.style.display = 'block';
+		makeApiCall();
         } else {
-			      /*** authorized failed. try auth again ***/
-			      authorizeButton.style.visibility = '';
-			      authorizeDiv.style.display = 'block';
-			      authorizeButton.onclick = handleAuthClick;
+		/*** authorized failed. try auth again ***/
+		authorizeButton.style.visibility = '';
+		authorizeDiv.style.display = 'block';
+		authorizeButton.onclick = handleAuthClick;
         }
     }
 	
@@ -48,7 +48,7 @@ var SCOPES = ["https://www.googleapis.com/auth/calendar","https://www.googleapis
         var request = gapi.client.plus.people.get({ 'userId': 'me'	}); 
         request.execute(function(resp) {
 	        /*** save / validate user details for local authentication ***/
-	        $.getJSON(baseUrl+'/appointments/syncuser', {value: resp}, function(response){
+	        $.getJSON(baseUrl+'<Some URL>', {value: resp}, function(response){
 	          ( response.success ) ? loadCalendarApi(response.calendar) : handleAuthError( resp, response );	
 	        }); 
 	      });	
@@ -70,7 +70,7 @@ var SCOPES = ["https://www.googleapis.com/auth/calendar","https://www.googleapis
 
 	/*** if new user then save the user details for reauthorization on later logins. ***/
 	function saveNewAccount(resp){ 
-	  $.getJSON(baseUrl+'/appointments/syncguser', {value: resp}, function(response){ 
+	  $.getJSON(baseUrl+'<Some URL>', {value: resp}, function(response){ 
 	    loadCalendarApi(response.calendar); 
 	  }); 
 	}
@@ -80,10 +80,10 @@ var SCOPES = ["https://www.googleapis.com/auth/calendar","https://www.googleapis
 		var authorizeDiv = document.getElementById('authorize-div');
 		authorizeDiv.style.display = 'none';
 		localStorage.setItem('calendar-details',JSON.stringify(calendar));  
-		localStorage.setItem('calendarId',JSON.stringify(calendar[0].VetCalendar));
-		if(!calendar || !calendar[0].VetCalendar.calendar_id ){ console.log('handle');
+		localStorage.setItem('calendarId',JSON.stringify(calendar[0].details));
+		if(!calendar || !calendar[0].details.calendar_id ){
 			gapi.client.load('calendar', 'v3', handleCalendarList);
-		} else { console.log('load');
+		} else {
 			gapi.client.load('calendar', 'v3',loadCalendar);
 		}
 	}
@@ -96,9 +96,8 @@ var SCOPES = ["https://www.googleapis.com/auth/calendar","https://www.googleapis
 	    $.each( calendars, function( key, value ) { 
 	      if( value.primary && value.primary == true ){
 	        localStorage.setItem('primary-calendar',JSON.stringify(value)); 
-	        $.getJSON(baseUrl+'/appointments/syncusercal', 
+	        $.getJSON(baseUrl+'<Some URL>', 
 	          {user: localStorage.getItem('calendar-details'), value: value}, function(response){
-	            console.log(response); 
 	            localStorage.setItem('calendarId',JSON.stringify(response.calendar)); 
 	            window.location.reload(); 
 	        }); 
@@ -138,7 +137,7 @@ $(document).ready(function() {
 		events: function(start, end, timezone, callback) {
 			var moment = $('#calendar').fullCalendar('getDate');
 			$.ajax({
-				url: baseUrl+'vets/getAgendaList',
+				url: baseUrl+'<Some URL>',
 				dataType: 'json',
 				data: {	month: moment.format('M') , year: moment.format('YYYY') },
 				success: function(doc) {
@@ -165,7 +164,7 @@ $(document).ready(function() {
 			if( div.length == 0 || $(div).attr('for') != event.appointment_id ){
 				$("#event-popup").html('');
 				/*** opens events in a popup window ***/
-				$( "#event-popup" ).load( baseUrl+'appointments/getEventDetails?appointment_id='+event.appointment_id, function() {
+				$( "#event-popup" ).load( baseUrl+'<Some URL>'+event.appointment_id, function() {
 					$('.login--popup-cont-tblpop').fadeIn(); 
 					$('.login-reg-form-tblpop').addClass('fadein'); 
 					$('body').addClass('popup-open');
@@ -210,7 +209,7 @@ function handleInsert(id, event){
 	});		
 	request.execute(function(gres) {
 		console.log('Event created: ' + gres.htmlLink);
-		$.getJSON(baseUrl+'/appointments/syncupdate', {id: id, value: gres}, function(response){
+		$.getJSON(baseUrl+'<Some URL>', {id: id, value: gres}, function(response){
 			console.log(response);
 		});
 	});
