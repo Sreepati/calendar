@@ -240,37 +240,66 @@ function syncAppointment(){
 
 // personal appointment section start
 function personalAppointment(){
+	document.getElementById('AppointmentOverwrite').value = btoa('false');
 	var form = $("#AppointmentAgendaForm"); var submiturl = $(form).attr('action');
-	$.post( submiturl, form.serialize(), function(response) {
-		console.log(response);
-		if (response.success) {
-			console.log(response.success);
-			alert(response.success);
-			setTimeout(function(){ location = baseUrl+response.redirect; }, 3000);
-		} else {
-			if( response.error.description ) {
-				form.find('textarea[name="data[Appointment][description]"]').after('<p class="has-error">'+response.error.description+'</p>');
+	if(validateForm(form) == true){
+		$.post( submiturl, form.serialize(), function(response) {
+			console.log(response);
+			if (!response.error && !response.message && !response.appointments) {
+				alert('Appointment(s) has been created. We have disabled the time slots for professional commitments for the time period defined.');
+				$.when.apply($, $.map(response, function( key, value ) {
+					handleInsert(value,key);					
+				})).done(function() { window.location.reload();  /* all ajax calls done now */ });
+			} else {
+				if( response.error && response.error.description ) {
+					form.find('textarea[name="data[Appointment][description]"]').after('<p class="has-error">'+response.error.description+'</p>');
+				}
+				if( response.error && response.error.filter_start ) {
+					form.find('input[name="data[Appointment][filter_start]"]').after('<p class="has-error">'+response.error.filter_start+'</p>');
+				}
+				if( response.error && response.error.filter_end ) {
+					form.find('input[name="data[Appointment][filter_end]"]').after('<p class="has-error">'+response.error.filter_end+'</p>');
+				}
+				if( response.error && response.error.appoint_start_time ) {
+					form.find('select[name="data[Appointment][appoint_start_time]"]').after('<p class="has-error">'+response.error.appoint_start_time+'</p>');
+				}
+				if( response.error && response.error.appoint_end_time ) {
+					form.find('select[name="data[Appointment][appoint_end_time]"]').after('<p class="has-error">'+response.error.appoint_end_time+'</p>');
+				}
+				if( !response.appointments && response.message ){
+					alert(response.message);
+				}
+				if ( response.appointments ){
+					if(confirm(response.appointments)){
+						document.getElementById('AppointmentOverwrite').value = btoa('true'); personalAppointment();
+					} else {
+						alert('You have cancelled the personal appointment.');
+					}
+				}
 			}
-			if( response.error.filter_start ) {
-				form.find('input[name="data[Appointment][filter_start]"]').after('<p class="has-error">'+response.error.filter_start+'</p>');
-			}
-			if( response.error.filter_end ) {
-				form.find('input[name="data[Appointment][filter_end]"]').after('<p class="has-error">'+response.error.filter_end+'</p>');
-			}
-			if( response.error.appoint_start_time ) {
-				form.find('select[name="data[Appointment][appoint_start_time]"]').after('<p class="has-error">'+response.error.appoint_start_time+'</p>');
-			}
-			if( response.error.appoint_end_time ) {
-				form.find('select[name="data[Appointment][appoint_end_time]"]').after('<p class="has-error">'+response.error.appoint_end_time+'</p>');
-			}
-		}
-	}, "json").done(function() {
-		console.log( "Success." );
-		setTimeout(function(){ $(form).find('p.has-error').remove(); }, 3000);
-	}).fail(function() {
-		console.log( "Some error occured. Please try after some time." );
-	}).always(function() {
-		console.log( "Completed." );
-	});
+		}, "json").done(function() {
+			console.log( "Success." );
+			setTimeout(function(){ $(form).find('p.has-error').remove(); }, 3000);
+		}).fail(function() {
+			console.log( "Some error occured. Please try after some time." );
+		}).always(function() {
+			console.log( "Completed." );
+		});
+	} else { return false; }
+}
+
+function validateForm(form){ form.find('.has-error').remove(); var count = 0; 
+	var t1 = form.find('textarea[name="data[Appointment][description]"]');
+	var t2 = form.find('input[name="data[Appointment][filter_start]"]');
+	var t3 = form.find('input[name="data[Appointment][filter_end]"]');
+	var t4 = form.find('select[name="data[Appointment][appoint_start_time]"]');
+	var t5 = form.find('select[name="data[Appointment][appoint_end_time]"]');
+	if( !t1.val() ) { t1.after('<p class="has-error">Please provide some description.</p>'); count++; }
+	if( !t2.val() ) { t2.after('<p class="has-error">Please provide start date.</p>'); count++; }
+	if( !t3.val() ) { t3.after('<p class="has-error">Please provide end date.</p>'); count++; }
+	if( !t4.val() ) { t4.after('<p class="has-error">Please provide start time.</p>'); count++; }
+	if( !t5.val() ) { t5.after('<p class="has-error">Please provide end time.</p>'); count++; }
+	if( new Date(t2.val()) > new Date(t3.val()) ) { t2.after('<p class="has-error">Start date cannot be bigger than end date.</p>'); count++; }
+	if(count == 0){ return true; } else { return false; }
 }
 // personal appointment section end
